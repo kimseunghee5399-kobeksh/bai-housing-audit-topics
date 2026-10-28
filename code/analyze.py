@@ -11,10 +11,10 @@ import numpy as np
 import pandas as pd
 
 warnings.filterwarnings('ignore')
-BASE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(BASE, 'data')
-RES = os.path.join(BASE, 'results')
-FIG = os.path.join(BASE, 'figures')
+RES = os.environ.get('BAI_RESULTS', os.path.join(BASE, 'output'))
+FIG = os.path.join(RES, 'figures')
 os.makedirs(RES, exist_ok=True)
 os.makedirs(FIG, exist_ok=True)
 
@@ -84,22 +84,28 @@ def main():
     ap.add_argument('--retokenize', action='store_true')
     args = ap.parse_args()
 
-    meta = load_meta()
-    rows = []
-    for _, r in meta.iterrows():
-        p = os.path.join(DATA, 'text', f"{r['srno']}.txt")
-        if not os.path.exists(p):
-            continue
-        txt = open(p, encoding='utf-8', errors='ignore').read()
-        hangul = len(re.findall(r'[가-힣]', txt))
-        if hangul < MIN_HANGUL:
-            continue
-        rows.append({'srno': r['srno'], 'year': r['year'], 'title': r['title'], 'audKnd': r['audKnd'], 'field': r['field'], 'chars': len(txt), 'hangul': hangul, 'text': clean(txt)})
-    df = pd.DataFrame(rows).sort_values(['year', 'srno']).reset_index(drop=True)
-    df['period'] = df['year'].apply(period_of)
-    print(f'corpus: {len(df)} docs, years {df.year.min()}-{df.year.max()}')
-    print(df.groupby('period').size())
-
+    if not os.path.isdir(os.path.join(DATA, 'text')):
+        if args.retokenize:
+            raise SystemExit('Retokenization requires raw data/text files.')
+        df = pd.read_csv(os.path.join(BASE, 'published_results', 'corpus_docs.csv'), dtype={'srno': str})
+        df = df.sort_values(['year', 'srno']).reset_index(drop=True)
+        print(f'Using published corpus metadata: {len(df)} documents')
+    else:
+        meta = load_meta()
+        rows = []
+        for _, r in meta.iterrows():
+            p = os.path.join(DATA, 'text', f"{r['srno']}.txt")
+            if not os.path.exists(p):
+                continue
+            txt = open(p, encoding='utf-8', errors='ignore').read()
+            hangul = len(re.findall(r'[가-힣]', txt))
+            if hangul < MIN_HANGUL:
+                continue
+            rows.append({'srno': r['srno'], 'year': r['year'], 'title': r['title'], 'audKnd': r['audKnd'], 'field': r['field'], 'chars': len(txt), 'hangul': hangul, 'text': clean(txt)})
+        df = pd.DataFrame(rows).sort_values(['year', 'srno']).reset_index(drop=True)
+        df['period'] = df['year'].apply(period_of)
+        print(f'corpus: {len(df)} docs, years {df.year.min()}-{df.year.max()}')
+        print(df.groupby('period').size())
     tok_path = os.path.join(RES, 'tokens.json')
     if os.path.exists(tok_path) and not args.retokenize:
         cache = json.load(open(tok_path, encoding='utf-8'))
@@ -312,7 +318,7 @@ def main():
     # corpus description
     desc = df.groupby('year').agg(n=('srno', 'size'), mean_hangul=('hangul', 'mean')).reset_index()
     desc.to_csv(os.path.join(RES, 'corpus_by_year.csv'), index=False)
-    df.drop(columns=['text']).to_csv(os.path.join(RES, 'corpus_docs.csv'), index=False, encoding='utf-8-sig')
+    df.drop(columns=['text'], errors='ignore').to_csv(os.path.join(RES, 'corpus_docs.csv'), index=False, encoding='utf-8-sig')
     print('done')
 
 

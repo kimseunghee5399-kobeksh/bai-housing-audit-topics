@@ -1,0 +1,18 @@
+{
+  "n_documents": 239,
+  "period_counts": {
+    "P1 2003-2012": 39,
+    "P2 2013-2017": 75,
+    "P3 2018-2021": 69,
+    "P4 2022-2026": 56
+  },
+  "n_tokens": 1621850,
+  "token_count_matches_metadata": true,
+  "refitted_lda": true,
+  "network_modes": {
+    "common": "same overall top 70 terms; degree denominator 69",
+    "period": "top 70 terms selected separately in each period"
+  },
+  "selection_note": "Selected published reports, not prevalence of all implementation defects.",
+  "published_commit": "a32fc849eafc0a054fdaee4a11d519361e5f618b"
+}

@@ -1,0 +1,84 @@
+감사보고서 논문 전체 분석코드 실행안내
+
+기준 저장소
+https://github.com/kimseunghee5399-kobeksh/bai-housing-audit-topics
+커밋: a32fc849eafc0a054fdaee4a11d519361e5f618b (2026-10-22)
+내보내기 확인일: 2026-10-28
+
+중요: 이 저장소의 공개 최신 버전에는 시기별 키워드 네트워크 재분석 코드가 없다.
+이번에 추가한 코드는 제공받은 v0.4 원고의 분석설명을 구현한 재현용 보완 코드이다.
+다른 곳에서 새로 실행한 시기별 분석의 원본 코드라고 간주해서는 안 된다.
+두 가지 노드 선정 방식을 모두 출력하므로 최종 원고의 방식과 구분해 사용한다.
+
+1. 설치와 실행 (압축을 푼 폴더에서)
+Python 3.12 이상 권장. 아래 명령은 Windows 터미널에서도 사용할 수 있다.
+
+python -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python run_analysis.py
+
+위 기본 실행은 공개된 문서별 토픽 비중을 이용해 표를 재집계하고,
+명사 토큰에서 시기별 빈도·TF-IDF·네트워크를 새로 계산한다.
+LDA를 재학습한 결과라고 표시하지 않는다.
+
+LDA(K=14, seed=42)도 다시 학습하려면:
+.venv\Scripts\python run_analysis.py --refit-lda
+
+K=6~20(간격 2) 일관성 탐색 후 K=14로 최종 분석하려면:
+.venv\Scripts\python run_analysis.py --search-k --refit-lda
+
+그림을 생략하려면 --no-figures, 다른 출력 폴더를 쓰려면 --output 폴더경로.
+일관성 탐색은 선택 사항이며 오래 걸릴 수 있다. 최종 K는 원고에 맞춰 14로 고정한다.
+requirements_tested.txt는 실제 검증 환경의 버전 기록이며 기본 requirements.txt와 구분한다.
+
+2. 들어 있는 것
+run_analysis.py: 표·검정·정책 영역 집계·시기별 키워드·논문 그림의 통합 실행기.
+code/analyze.py: 원본 전처리·Kiwi 명사 추출·LDA·일관성·추세·전체 네트워크 코드에 경로/캐시 실행 보완.
+code/extract_text.py, code/hwp5_text.py: PDF/HWP 본문 추출. 원문을 별도 확보해야 사용 가능.
+code/make_figures*.py: 기존 그림 코드의 보존·경로 수정본. 새 표·그림은 통합 실행기를 사용한다.
+upstream_code/: GitHub에서 내려받은 원본 코드 그대로.
+published_results/: 원본 공개 토큰·토픽 비중·표. 실행 중 덮어쓰지 않는다.
+published_figures*/: GitHub의 기존 그림. 기존 전체 네트워크와 신규 시기별 네트워크를 혼동하지 않는다.
+data/: 원본 수집 메타데이터. 원문 PDF/HWP 및 추출 본문은 포함하지 않는다.
+output/: 이번에 실제 실행하여 생성한 표·시기별 네트워크와 그림.
+provenance.json: 기준 커밋, 원본 파일 해시와 보완 범위.
+분석대조_검증결과.txt: 원고와 결과의 대응 및 재현 검증 범위.
+
+3. 논문 결과와 파일 대응
+기초통계: corpus_docs.csv, corpus_by_year.csv, run_summary.json
+표 4-1 주제: topic_terms.csv, topic_labels.json, topic_representative_docs.csv
+표 4-2 영역별 비중/추세: domain_period_share.csv, domain_year_share.csv
+표 4-3 토픽별 비중/추세: period_topic_share.csv, topic_trends.csv
+감사종류 구성: period_audit_type_counts.csv, period_audit_type_share.csv
+표 4-4 시기별 중심성: period_network_top10.csv와 network_nodes_P1_common.csv 등
+그림 4-5 시기별 관계망: figures/fig4_period_network_common.png
+시기마다 별도 상위어 선정 결과: network_nodes_P1_period.csv 등과 figures/fig4_period_network_period.png
+시기별 빈도: frequency_P1.csv 등. TF-IDF: period_tfidf_top30.csv
+전체 간선: network_edges_P1_common.csv 등. Jaccard와 동시출현 문서 수 포함.
+
+4. 두 가지 시기별 키워드 분석
+common: 전체 239건에서 빈도 상위 70개를 한 번 선정하여 시기별 문서에서 연결을 계산.
+         비교대상과 분모 69가 동일하다. 제공된 v0.4 원고의 표 4-4 방식.
+period: 각 시기에서 빈도 상위 70개를 새로 선정한 뒤 연결을 계산.
+        시기 고유 키워드를 보지만 네트워크 구성이 달라 동일 단어의 중심성 직접 비교에 주의.
+두 방식 모두 문서 단위 공출현, Jaccard 유사도, 노드별 상위 4개 이웃의 합집합(무방향),
+Louvain(seed=42)을 사용한다. 단어·문장 창 내 공출현으로 바꾸지 않았다.
+전체 빈도가 아니라 연결중심성 순으로 순위를 출력한다. 동률은 빈도·단어순 정렬.
+numpy 버전에 따라 Jaccard 동률의 이웃 선택이 달라질 수 있어 검증 환경 버전을 함께 제공한다.
+군집 번호는 시기별로 독립적이므로 같은 번호를 같은 의미의 군집으로 읽지 않는다.
+
+5. 원문부터 재구축할 경우
+python -m pip install -r requirements_raw_text.txt
+pdftotext(Poppler)를 별도 설치하고 원본 README의 감사원 다운로드 절차를 따른다.
+python code/extract_text.py 다운로드폴더
+이후 code/analyze.py --k 14 --retokenize로 토큰을 다시 만들 수 있다.
+원문의 사용·수집 권한과 실제 파일 식별은 연구자의 수집 기록에 맞춘다.
+텍스트 추출과 형태소 재분석은 원문 미포함으로 이번 패키지에서 새로 전수 실행하지 않았다.
+
+6. 해석과 검정 범위
+주제·영역 비중은 선정된 보고서의 상대적 구성이지 집행 결함 발생률이 아니다.
+Spearman p는 보정 전 값이며, 유의하지 않음을 ‘변화 없음’의 증거로 단정하지 않는다.
+시각화 이동평균은 3개 관측연도 기준이다. 자료가 없는 역년을 0으로 채우지 않는다.
+감사종류 구성표와 선택편향을 제거한 인과분석은 다르다. 보정 회귀를 수행한 것으로 쓰지 않는다.
+시기별 키워드 변화가 감사청구 주체나 정책 사건 때문에 발생했다고 검증한 것은 아니다.
+

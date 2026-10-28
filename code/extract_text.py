@@ -5,7 +5,7 @@ import os, re, sys, subprocess, zipfile, tempfile, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hwp5_text import extract as hwp_extract
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'text')
+OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'text')
 os.makedirs(OUT, exist_ok=True)
 
 

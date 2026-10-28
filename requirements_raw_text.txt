@@ -1,0 +1,5 @@
+-r requirements.txt
+kiwipiepy>=0.24
+olefile>=0.47
+pycryptodome>=3.20
+pypdf>=5

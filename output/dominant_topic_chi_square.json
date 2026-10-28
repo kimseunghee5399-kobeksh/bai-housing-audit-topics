@@ -1,0 +1,8 @@
+{
+  "chi2": 48.25820359962674,
+  "p": 0.14699641892888032,
+  "dof": 39,
+  "cramers_v": 0.2594334660196555,
+  "expected_cells_below_5": 42,
+  "note": "Exploratory, no multiplicity correction; dominant topics discard within-document mixtures."
+}

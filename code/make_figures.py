@@ -7,9 +7,12 @@ import matplotlib.pyplot as plt
 from matplotlib import font_manager
 import networkx as nx
 
-BASE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES, FIG = os.path.join(BASE, 'results'), os.path.join(BASE, 'figures')
 fp = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
+
+if not os.path.exists(fp):
+    fp = font_manager.findfont('Malgun Gothic' if os.name == 'nt' else 'DejaVu Sans')
 font_manager.fontManager.addfont(fp)
 plt.rcParams['font.family'] = font_manager.FontProperties(fname=fp).get_name()
 plt.rcParams['axes.unicode_minus'] = False
@@ -69,7 +72,7 @@ fig.tight_layout(); fig.savefig(os.path.join(FIG, 'fig3_topic_trends.png'), dpi=
 tokens = json.load(open(os.path.join(RES, 'tokens.json'), encoding='utf-8'))
 docs = pd.read_csv(os.path.join(RES, 'corpus_docs.csv'))
 from collections import Counter
-STOP2 = set(open(os.path.join(BASE, 'analyze.py'), encoding='utf-8').read().split("STOP2 = set('''")[1].split("'''")[0].split())
+STOP2 = set(open(os.path.join(BASE, 'code', 'analyze.py'), encoding='utf-8').read().split("STOP2 = set('''")[1].split("'''")[0].split())
 toks = [[w for w in tokens[str(s)] if w not in STOP2] for s in docs.srno]
 cnt = Counter(w for t in toks for w in t)
 docfreq = Counter(w for t in toks for w in set(t))

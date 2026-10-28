@@ -1,0 +1,10 @@
+{
+  "manuscript_network_checks": 16,
+  "all_network_checks_match": true,
+  "domain_period_table_matches_published": true,
+  "lda_refit_completed": true,
+  "lda_mean_absolute_topic_difference": 1.196236416985657e-06,
+  "lda_max_absolute_topic_difference": 0.001143813133239746,
+  "lda_mean_matched_topic_correlation": 0.9999999868167648,
+  "lda_dictionary_size": 5825
+}
